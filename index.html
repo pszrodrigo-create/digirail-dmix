@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DigiRail Connect</title>
+  <style>
+    :root {
+      --bg: #121614;
+      --card: #1c2420;
+      --line: rgba(214, 196, 160, 0.16);
+      --text: #f3f1ea;
+      --muted: #a7aea6;
+      --on: #3ddc84;
+      --off: #6e7872;
+      --copper: #e0a15a;
+      --danger: #e07a68;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background:
+        radial-gradient(800px 420px at 0% -10%, rgba(224, 161, 90, 0.16), transparent 55%),
+        radial-gradient(700px 480px at 100% 100%, rgba(61, 220, 132, 0.08), transparent 50%),
+        var(--bg);
+    }
+
+    .wrap {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.7rem;
+      letter-spacing: -0.03em;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      max-width: 44rem;
+      line-height: 1.45;
+    }
+
+    .layout {
+      margin-top: 22px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--copper);
+    }
+
+    form.conn {
+      display: grid;
+      grid-template-columns: 1.4fr 0.6fr 0.7fr auto auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #101512;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      font-size: 1rem;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    input:focus-visible, button:focus-visible {
+      outline: 3px solid #f0d7b0;
+      outline-offset: 2px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 14px;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+      color: #1a140c;
+      background: var(--copper);
+    }
+
+    button.ghost {
+      color: var(--text);
+      background: transparent;
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .status {
+      margin: 14px 0 0;
+      min-height: 1.4rem;
+      color: #f0d7b0;
+      line-height: 1.4;
+    }
+
+    .status.ok { color: #b6f5d2; }
+    .status.bad { color: #ffc7be; }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .meta strong { color: var(--text); font-weight: 650; }
+
+    .hint {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .channel {
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .channel b {
+      font-size: 0.95rem;
+    }
+
+    .lamp {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--off);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+    }
+
+    .channel.on .dot {
+      background: var(--on);
+      box-shadow: 0 0 12px rgba(61, 220, 132, 0.8);
+    }
+
+    .channel.on { color: var(--text); }
+
+    .channel button {
+      width: 100%;
+    }
+
+    .channel.off-btn button {
+      color: var(--text);
+      background: #2a3330;
+    }
+
+    .titulo-processo {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .titulo-processo.fim { color: #f0d7b0; }
+
+    .etapas {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .etapas article {
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .etapas article.ativa {
+      border-color: rgba(61, 220, 132, 0.75);
+      background: rgba(61, 220, 132, 0.12);
+    }
+
+    .etapas b {
+      display: block;
+      color: var(--copper);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+    }
+
+    .etapas span {
+      display: block;
+      margin-top: 6px;
+      font-size: 1.05rem;
+    }
+
+    #btnRecomecar {
+      margin-top: 16px;
+      width: 100%;
+      padding: 14px;
+      font-size: 1.05rem;
+    }
+
+    @media (max-width: 800px) {
+      form.conn, .grid { grid-template-columns: 1fr 1fr; }
+      form.conn { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 520px) {
+      .grid, form.conn, .etapas { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>DigiRail Connect</h1>
+      <p>Cada aperto na entrada D2 avança um estágio: K1, depois K2, depois K3. O quarto aperto encerra o processo.</p>
+    </header>
+
+    <div class="layout">
+      <section class="card">
+        <h2>Conexão</h2>
+        <form class="conn" id="formConn">
+          <label>IP do módulo
+            <input id="host" name="host" inputmode="decimal" autocomplete="off" placeholder="ex.: 192.168.0.10" required>
+          </label>
+          <label>Porta
+            <input id="porta" name="porta" type="number" min="1" max="65535" value="502" required>
+          </label>
+          <label>Modbus
+            <input id="unidade" name="unidade" type="number" min="0" max="255" value="1" required>
+          </label>
+          <button id="btnConectar" type="submit">Conectar</button>
+          <button id="btnSoltar" class="ghost" type="button">Desconectar</button>
+        </form>
+        <p id="status" class="status" role="status">Informe o IP do DigiRail e conecte.</p>
+        <p id="hint" class="hint"></p>
+      </section>
+
+      <section class="card">
+        <h2>Módulo</h2>
+        <p class="meta" id="meta">Aguardando conexão.</p>
+      </section>
+
+      <section class="card">
+        <h2>Processo</h2>
+        <p id="tituloProcesso" class="titulo-processo">Aguardando pulso</p>
+        <div class="etapas">
+          <article id="etapa1" data-etapa="1"><b>K1</b><span>Primeiro processo</span></article>
+          <article id="etapa2" data-etapa="2"><b>K2</b><span>Segundo processo</span></article>
+          <article id="etapa3" data-etapa="3"><b>K3</b><span>Terceiro processo</span></article>
+        </div>
+        <p id="pulsoLinha" class="hint">O botão de pulso está na entrada D2.</p>
+        <button id="btnRecomecar" type="button" hidden>Recomeçar processos</button>
+      </section>
+
+      <section class="card">
+        <h2>Entradas digitais</h2>
+        <div class="grid" id="entradas"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const host = document.getElementById("host");
+    const porta = document.getElementById("porta");
+    const unidade = document.getElementById("unidade");
+    const statusEl = document.getElementById("status");
+    const hint = document.getElementById("hint");
+    const meta = document.getElementById("meta");
+    const entradas = document.getElementById("entradas");
+    const tituloProcesso = document.getElementById("tituloProcesso");
+    const pulsoLinha = document.getElementById("pulsoLinha");
+    const btnRecomecar = document.getElementById("btnRecomecar");
+    const btnConectar = document.getElementById("btnConectar");
+    const btnSoltar = document.getElementById("btnSoltar");
+
+    let ocupado = false;
+
+    function setStatus(texto, tipo) {
+      statusEl.textContent = texto;
+      statusEl.className = "status" + (tipo ? " " + tipo : "");
+    }
+
+    function desenharCanais(estado) {
+      const assinatura = JSON.stringify(estado.indices_entrada);
+      if (entradas.dataset.assinatura !== assinatura) {
+        entradas.dataset.assinatura = assinatura;
+        entradas.replaceChildren();
+        estado.indices_entrada.forEach((indice) => {
+          const card = document.createElement("article");
+          card.className = "channel";
+          const nome = indice === 1 ? "D2 · pulso" : "D" + (indice + 1);
+          card.innerHTML = `<b>${nome}</b><span class="lamp"><i class="dot"></i><span class="valor">em repouso</span></span>`;
+          card.dataset.indice = String(indice);
+          entradas.appendChild(card);
+        });
+      }
+
+      entradas.querySelectorAll(".channel").forEach((card) => {
+        const ligado = estado.entradas[Number(card.dataset.indice)] === 1;
+        card.classList.toggle("on", ligado);
+        card.querySelector(".valor").textContent = ligado ? "acionada" : "em repouso";
+      });
+    }
+
+    function pintarProcesso(estado) {
+      const proc = estado.processo || { etapa: 0, titulo: "Aguardando pulso", recomecar: false, pulso: 0 };
+      tituloProcesso.textContent = proc.titulo;
+      tituloProcesso.classList.toggle("fim", proc.etapa === 4);
+      document.querySelectorAll(".etapas article").forEach((card) => {
+        card.classList.toggle("ativa", Number(card.dataset.etapa) === proc.etapa);
+      });
+      pulsoLinha.textContent = proc.pulso
+        ? "Pulso D2 pressionado."
+        : "Aguardando o botão de pulso na entrada D2.";
+      btnRecomecar.hidden = !proc.recomecar;
+      btnRecomecar.disabled = !estado.conectado;
+    }
+
+    function pintar(estado) {
+      if (!host.value) host.value = estado.host || "";
+      if (document.activeElement !== porta) porta.value = estado.porta;
+      if (document.activeElement !== unidade) unidade.value = estado.unidade;
+
+      const ethernet = (estado.interfaces || []).find((item) => /^ethernet$/i.test(item.nome));
+      const lista = (estado.interfaces || []).map((item) => `${item.nome}: ${item.ip}`).join(" · ");
+      hint.textContent = ethernet && String(ethernet.ip).startsWith("169.254.")
+        ? `A placa ${ethernet.nome} está em ${ethernet.ip}, sem DHCP. O DigiRail só responde se o IP dele estiver nessa mesma rede.`
+        : (lista ? `Redes deste PC: ${lista}` : "");
+
+      if (estado.dispositivo) {
+        const d = estado.dispositivo;
+        meta.innerHTML = `<span>Modelo <strong>${d.modelo}</strong></span><span>Série <strong>${d.serie}</strong></span><span>Firmware <strong>${d.firmware}</strong></span><span>MAC <strong>${d.mac}</strong></span><span>ID <strong>${d.id}</strong></span>`;
+      } else {
+        meta.textContent = "Aguardando conexão.";
+      }
+
+      desenharCanais(estado);
+      pintarProcesso(estado);
+      btnSoltar.disabled = !estado.conectado;
+      if (estado.conectado && estado.erro) setStatus(estado.erro, "");
+      else if (estado.conectado) setStatus(`Conectado em ${estado.host}:${estado.porta}. As entradas acompanham o módulo.`, "ok");
+      else if (estado.erro && estado.erro !== "Desconectado." && estado.erro !== "Informe o IP do DigiRail e conecte.") setStatus(estado.erro, "bad");
+      else setStatus(estado.erro || "Informe o IP do DigiRail e conecte.", "");
+    }
+
+    async function pedir(url, corpo) {
+      const resposta = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(corpo || {})
+      });
+      const dados = await resposta.json();
+      if (!resposta.ok) throw new Error(dados.erro || "Falha na comunicação.");
+      return dados;
+    }
+
+    document.getElementById("formConn").addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      ocupado = true;
+      btnConectar.disabled = true;
+      setStatus("Conectando…", "");
+      try {
+        pintar(await pedir("/api/conectar", {
+          host: host.value.trim(),
+          porta: Number(porta.value),
+          unidade: Number(unidade.value)
+        }));
+      } catch (erro) {
+        setStatus(erro.message, "bad");
+      } finally {
+        ocupado = false;
+        btnConectar.disabled = false;
+      }
+    });
+
+    btnSoltar.addEventListener("click", async () => {
+      try {
+        pintar(await pedir("/api/desconectar", {}));
+      } catch (erro) {
+        setStatus(erro.message, "bad");
+      }
+    });
+
+    btnRecomecar.addEventListener("click", async () => {
+      ocupado = true;
+      btnRecomecar.disabled = true;
+      try {
+        pintar(await pedir("/api/recomecar", {}));
+      } catch (erro) {
+        setStatus(erro.message, "bad");
+      } finally {
+        ocupado = false;
+      }
+    });
+
+    async function atualizar() {
+      if (ocupado) return;
+      try {
+        const resposta = await fetch("/api/estado", { cache: "no-store" });
+        pintar(await resposta.json());
+      } catch (erro) {
+        setStatus("O painel local parou de responder.", "bad");
+      }
+    }
+
+    desenharCanais({
+      indices_entrada: [0, 1, 2, 3],
+      entradas: [0, 0, 0, 0],
+      conectado: false,
+      processo: { etapa: 0, titulo: "Aguardando pulso", recomecar: false, pulso: 0 }
+    });
+    pintarProcesso({ conectado: false, processo: { etapa: 0, titulo: "Aguardando pulso", recomecar: false, pulso: 0 } });
+    atualizar();
+    setInterval(atualizar, 300);
+  </script>
+</body>
+</html>
